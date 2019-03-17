@@ -48,4 +48,11 @@
 
     <!-- Value in SharedPreferences for green color option -->
     <string name="pref_color_green_value" translatable="false">green</string>
+
+    <!-- Label for the scale edittext preference -->
+    <string name="pref_scale_label">Scale</string>
+    <!-- Key name for storing scale in SharedPreferences -->
+    <string name="pref_scale_key" translatable="false">scale_key</string>
+    <!-- defaultValue for the scale edittext preference -->
+    <string name="pref_scale_default" translatable="false">1</string>
 </resources>
