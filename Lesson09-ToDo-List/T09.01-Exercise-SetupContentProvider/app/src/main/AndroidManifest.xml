@@ -27,6 +27,11 @@
 
         <!-- TODO (3) Register the TaskContentProvider -->
         <!-- TODO (4) Set name, authorities, and exported attributes -->
+        <provider
+            android:name=".data.TaskContentProvider"
+            android:authorities="com.example.android.todolist"
+            android:exported="false">
+        </provider>
         <!-- exported = false limits access to this ContentProvider to only this app -->
 
     </application>
