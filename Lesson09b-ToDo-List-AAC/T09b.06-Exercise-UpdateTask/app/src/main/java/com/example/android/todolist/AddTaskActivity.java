@@ -50,6 +50,8 @@ public class AddTaskActivity extends AppCompatActivity {
     Button mButton;
 
     private int mTaskId = DEFAULT_TASK_ID;
+    private TaskEntry taskEntryToBeUpdated;
+    private int priorityToBeUpdated;
 
     // Member variable for the Database
     private AppDatabase mDb;
@@ -73,15 +75,28 @@ public class AddTaskActivity extends AppCompatActivity {
                 // populate the UI
                 // TODO (3) Assign the value of EXTRA_TASK_ID in the intent to mTaskId
                 // Use DEFAULT_TASK_ID as the default
+                mTaskId = intent.getExtras().getInt(EXTRA_TASK_ID);
 
                 // TODO (4) Get the diskIO Executor from the instance of AppExecutors and
                 // call the diskIO execute method with a new Runnable and implement its run method
+                AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                    @Override
+                    public void run() {
 
                 // TODO (5) Use the loadTaskById method to retrieve the task with id mTaskId and
                 // assign its value to a final TaskEntry variable
+                        taskEntryToBeUpdated = mDb.taskDao().loadTaskById(mTaskId);
 
                 // TODO (6) Call the populateUI method with the retrieve tasks
                 // Remember to wrap it in a call to runOnUiThread
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                populateUI(taskEntryToBeUpdated);
+                            }
+                        });
+                    }
+                });
             }
         }
     }
@@ -115,8 +130,14 @@ public class AddTaskActivity extends AppCompatActivity {
      */
     private void populateUI(TaskEntry task) {
         // TODO (7) return if the task is null
+        if (task == null)
+            return;
 
         // TODO (8) use the variable task to populate the UI
+        String descriptionToBeUpdated = task.getDescription();
+        mEditText.setText(descriptionToBeUpdated);
+        priorityToBeUpdated = task.getPriority();
+        mRadioGroup.check(getViewFromPriority());
     }
 
     /**
@@ -124,9 +145,9 @@ public class AddTaskActivity extends AppCompatActivity {
      * It retrieves user input and inserts that new task data into the underlying database.
      */
     public void onSaveButtonClicked() {
-        String description = mEditText.getText().toString();
-        int priority = getPriorityFromViews();
-        Date date = new Date();
+        final String description = mEditText.getText().toString();
+        final int priority = getPriorityFromViews();
+        final Date date = new Date();
 
         final TaskEntry taskEntry = new TaskEntry(description, priority, date);
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
@@ -135,10 +156,32 @@ public class AddTaskActivity extends AppCompatActivity {
                 // TODO (9) insert the task only if mTaskId matches DEFAULT_TASK_ID
                 // Otherwise update it
                 // call finish in any case
-                mDb.taskDao().insertTask(taskEntry);
+                if (mTaskId == DEFAULT_TASK_ID) {
+                    mDb.taskDao().insertTask(taskEntry);
+                } else {
+                    taskEntryToBeUpdated.setDescription(description);
+                    taskEntryToBeUpdated.setPriority(priority);
+                    taskEntryToBeUpdated.setUpdatedAt(date);
+                    mDb.taskDao().updateTask(taskEntryToBeUpdated);
+                }
                 finish();
             }
         });
+    }
+
+    public int getViewFromPriority() {
+        int checkedId = 0;
+        switch (priorityToBeUpdated) {
+            case PRIORITY_HIGH:
+                checkedId = R.id.radButton1;
+                break;
+            case PRIORITY_MEDIUM:
+                checkedId = R.id.radButton2;
+                break;
+            case PRIORITY_LOW:
+                checkedId = R.id.radButton3;
+        }
+        return checkedId;
     }
 
     /**
